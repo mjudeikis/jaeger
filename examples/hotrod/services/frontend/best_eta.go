@@ -66,6 +66,7 @@ func newBestETA(tracer opentracing.Tracer, logger log.Factory) *bestETA {
 }
 
 func (eta *bestETA) Get(ctx context.Context, customerID string) (*Response, error) {
+	eta.logger.For(ctx).Info("GET CUSTOMER")
 	customer, err := eta.customer.Get(ctx, customerID)
 	if err != nil {
 		return nil, err

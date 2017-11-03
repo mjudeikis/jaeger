@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: driver-ingress
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+  selector:
+    app: driver
+    deploymentconfig: driver
+  type: LoadBalancer

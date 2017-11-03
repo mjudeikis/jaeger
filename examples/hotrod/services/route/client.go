@@ -16,6 +16,7 @@ package route
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -25,6 +26,7 @@ import (
 
 	"github.com/uber/jaeger/examples/hotrod/pkg/log"
 	"github.com/uber/jaeger/examples/hotrod/pkg/tracing"
+	"github.com/uber/jaeger/examples/hotrod/services/config"
 )
 
 // Client is a remote client that implements route.Interface
@@ -32,6 +34,7 @@ type Client struct {
 	tracer opentracing.Tracer
 	logger log.Factory
 	client *tracing.HTTPClient
+	config config.Configuration
 }
 
 // NewClient creates a new route.Client
@@ -43,6 +46,7 @@ func NewClient(tracer opentracing.Tracer, logger log.Factory) *Client {
 			Client: &http.Client{Transport: &nethttp.Transport{}},
 			Tracer: tracer,
 		},
+		config: config.GetConfig(logger),
 	}
 }
 
@@ -53,7 +57,7 @@ func (c *Client) FindRoute(ctx context.Context, pickup, dropoff string) (*Route,
 	v := url.Values{}
 	v.Set("pickup", pickup)
 	v.Set("dropoff", dropoff)
-	url := "http://127.0.0.1:8083/route?" + v.Encode()
+	url := fmt.Sprintf("%s/route?%s", c.config.RouteAPIURL, v.Encode())
 
 	var route Route
 	if err := c.client.GetJSON(ctx, "/route", url, &route); err != nil {

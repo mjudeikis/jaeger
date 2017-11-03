@@ -25,6 +25,7 @@ import (
 
 	"github.com/uber/jaeger/examples/hotrod/pkg/log"
 	"github.com/uber/jaeger/examples/hotrod/pkg/tracing"
+	"github.com/uber/jaeger/examples/hotrod/services/config"
 )
 
 // Client is a remote client that implements customer.Interface
@@ -32,6 +33,7 @@ type Client struct {
 	tracer opentracing.Tracer
 	logger log.Factory
 	client *tracing.HTTPClient
+	config config.Configuration
 }
 
 // NewClient creates a new customer.Client
@@ -43,14 +45,14 @@ func NewClient(tracer opentracing.Tracer, logger log.Factory) *Client {
 			Client: &http.Client{Transport: &nethttp.Transport{}},
 			Tracer: tracer,
 		},
+		config: config.GetConfig(logger),
 	}
 }
 
 // Get implements customer.Interface#Get as an RPC
 func (c *Client) Get(ctx context.Context, customerID string) (*Customer, error) {
 	c.logger.For(ctx).Info("Getting customer", zap.String("customer_id", customerID))
-
-	url := fmt.Sprintf("http://127.0.0.1:8081/customer?customer=%s", customerID)
+	url := fmt.Sprintf("%s/customer?customer=%s", c.config.CustomerAPIURL, customerID)
 	var customer Customer
 	if err := c.client.GetJSON(ctx, "/customer", url, &customer); err != nil {
 		return nil, err

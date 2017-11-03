@@ -24,6 +24,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/uber/jaeger/examples/hotrod/pkg/log"
+	"github.com/uber/jaeger/examples/hotrod/services/config"
 	"github.com/uber/jaeger/examples/hotrod/services/driver/thrift-gen/driver"
 )
 
@@ -33,6 +34,7 @@ type Client struct {
 	logger log.Factory
 	ch     *tchannel.Channel
 	client driver.TChanDriver
+	config config.Configuration
 }
 
 // NewClient creates a new driver.Client
@@ -46,8 +48,9 @@ func NewClient(tracer opentracing.Tracer, logger log.Factory) *Client {
 	if err != nil {
 		logger.Bg().Fatal("Cannot create TChannel", zap.Error(err))
 	}
+	config := config.GetConfig(logger)
 	clientOpts := &thrift.ClientOptions{
-		HostPort: "127.0.0.1:8082",
+		HostPort: config.DriverAPIURL,
 	}
 	thriftClient := thrift.NewClient(ch, "driver", clientOpts)
 	client := driver.NewTChanDriverClient(thriftClient)
@@ -57,6 +60,7 @@ func NewClient(tracer opentracing.Tracer, logger log.Factory) *Client {
 		logger: logger,
 		ch:     ch,
 		client: client,
+		config: config,
 	}
 }
 

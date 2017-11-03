@@ -24,6 +24,7 @@ import (
 	"github.com/uber/jaeger/examples/hotrod/pkg/httperr"
 	"github.com/uber/jaeger/examples/hotrod/pkg/log"
 	"github.com/uber/jaeger/examples/hotrod/pkg/tracing"
+	"github.com/uber/jaeger/examples/hotrod/services/config"
 )
 
 // Server implements jaeger-demo-frontend service
@@ -32,6 +33,7 @@ type Server struct {
 	tracer   opentracing.Tracer
 	logger   log.Factory
 	bestETA  *bestETA
+	config   config.Configuration
 }
 
 // NewServer creates a new frontend.Server
@@ -41,6 +43,7 @@ func NewServer(hostPort string, tracer opentracing.Tracer, logger log.Factory) *
 		tracer:   tracer,
 		logger:   logger,
 		bestETA:  newBestETA(tracer, logger),
+		config:   config.GetConfig(logger),
 	}
 }
 
@@ -60,7 +63,7 @@ func (s *Server) createServeMux() http.Handler {
 
 func (s *Server) home(w http.ResponseWriter, r *http.Request) {
 	s.logger.For(r.Context()).Info("HTTP", zap.String("method", r.Method), zap.Stringer("url", r.URL))
-	http.ServeFile(w, r, "services/frontend/web_assets/index.html")
+	http.ServeFile(w, r, s.config.FrontendFileLocation)
 }
 
 func (s *Server) dispatch(w http.ResponseWriter, r *http.Request) {
